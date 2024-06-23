@@ -1,6 +1,5 @@
 package com.example.wigellssushi.VO;
 
-import com.example.wigellssushi.util.CurrencyConverter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -24,7 +23,7 @@ public class Dish {
     @Column(name = "price_euro")
     private double priceEuro;
 
-    @ManyToMany(mappedBy = "dishes")
+    @ManyToMany(mappedBy = "dishes", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<CustomerOrder> customerOrders;
 
@@ -34,7 +33,6 @@ public class Dish {
     public Dish(String name, Double priceSEK) {
         this.name = name;
         this.priceSEK = priceSEK;
-        this.priceEuro = CurrencyConverter.convertSEKToEuro(priceSEK);
     }
 
     public Long getId() {
@@ -57,10 +55,7 @@ public class Dish {
         return priceSEK;
     }
 
-    public void setPriceSEK(double priceSEK) {
-        this.priceSEK = priceSEK;
-        this.priceEuro = CurrencyConverter.convertSEKToEuro(priceSEK);
-    }
+    public void setPriceSEK(double priceSEK) { this.priceSEK = priceSEK; }
 
     public double getPriceEuro() {
         return priceEuro;

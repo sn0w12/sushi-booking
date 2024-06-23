@@ -1,8 +1,8 @@
 package com.example.wigellssushi.VO;
 
-import com.example.wigellssushi.util.CurrencyConverter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
@@ -31,6 +31,21 @@ public class CustomerOrder {
     )
     private List<Dish> dishes;
 
+    @Transient
+    private RestTemplate restTemplate;
+
+    public CustomerOrder() {
+    }
+
+    public CustomerOrder(Long id, Customer customer, double totalPriceSEK, double totalPriceEuro, List<Dish> dishes, boolean takeaway) {
+        this.id = id;
+        this.customer = customer;
+        this.totalPriceSEK = totalPriceSEK;
+        this.totalPriceEuro = totalPriceEuro;
+        this.dishes = dishes;
+        this.takeaway = takeaway;
+    }
+
     boolean takeaway;
 
     public Long getId() {
@@ -53,10 +68,7 @@ public class CustomerOrder {
         return totalPriceSEK;
     }
 
-    public void setTotalPriceSEK(double totalPriceSEK) {
-        this.totalPriceSEK = totalPriceSEK;
-        this.totalPriceEuro = CurrencyConverter.convertSEKToEuro(totalPriceSEK);
-    }
+    public void setTotalPriceSEK(double totalPriceSEK) { this.totalPriceSEK = totalPriceSEK; }
 
     public double getTotalPriceEuro() {
         return totalPriceEuro;

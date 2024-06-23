@@ -31,14 +31,14 @@ public class BookingService {
 
     public Booking addBooking(Booking booking) {
         if (booking.getRoom() != null) {
-            Room room = restTemplate.getForObject("http://room-service/rooms/" + booking.getRoom().getId(), Room.class);
+            Room room = restTemplate.getForObject("http://room-service/api/v3/rooms/" + booking.getRoom().getId(), Room.class);
             if (room == null) {
                 throw new RuntimeException("Room not found with id " + booking.getRoom().getId());
             }
             booking.setRoom(room);
         }
 
-        double totalPriceSek = 0;
+        double totalDishPriceSek = 0;
 
         CustomerOrder customerOrder = booking.getCustomerOrder();
         if (customerOrder != null) {
@@ -47,24 +47,35 @@ public class BookingService {
 
             for (Dish dish : customerOrder.getDishes()) {
                 if (dish.getId() != null) {
-                    Dish existingDish = restTemplate.getForObject("http://dish-service/sushis/" + dish.getId(), Dish.class);
+                    Dish existingDish = restTemplate.getForObject("http://dish-service/api/v3/sushis/" + dish.getId(), Dish.class);
                     if (existingDish == null) {
                         throw new RuntimeException("Dish not found with id " + dish.getId());
                     }
                     dishes.add(existingDish);
-                    totalPriceSek += existingDish.getPriceSEK();
+                    totalDishPriceSek += existingDish.getPriceSEK();
                 } else {
-                    throw new RuntimeException("Dish must have either an ID or a name");
+                    throw new RuntimeException("Dish must have an ID");
                 }
             }
 
             customerOrder.setDishes(dishes);
         } else {
-            throw new RuntimeException("Booking must have a CustomerOrder");
+            customerOrder = new CustomerOrder();
+            customerOrder.setCustomer(booking.getCustomer());
+            customerOrder.setDishes(new ArrayList<>());
+            booking.setCustomerOrder(customerOrder);
         }
 
         if (booking.getCustomerOrder().getTotalPriceSEK() == 0.0) {
-            booking.getCustomerOrder().setTotalPriceSEK(totalPriceSek);
+            booking.getCustomerOrder().setTotalPriceSEK(totalDishPriceSek);
+            booking.getCustomerOrder().setTotalPriceEuro(restTemplate.getForObject("http://currency-service/api/v3/sektoeuro?amountInSEK=" + totalDishPriceSek, double.class));
+        }
+
+        if (booking.getTotalPriceSEK() == 0.0) {
+            booking.setTotalPriceSEK(totalDishPriceSek);
+            booking.setTotalPriceEuro(restTemplate.getForObject("http://currency-service/api/v3/sektoeuro?amountInSEK=" + totalDishPriceSek, double.class));
+        } else {
+            booking.setTotalPriceEuro(restTemplate.getForObject("http://currency-service/api/v3/sektoeuro?amountInSEK=" + booking.getTotalPriceSEK(), double.class));
         }
 
         Booking savedBooking = bookingRepository.save(booking);
@@ -89,6 +100,7 @@ public class BookingService {
             }
             if (bookingDetails.getTotalPriceSEK() != 0) {
                 existingBooking.setTotalPriceSEK(bookingDetails.getTotalPriceSEK());
+                existingBooking.setTotalPriceEuro(restTemplate.getForObject("http://currency-service/api/v3/sektoeuro?amountInSEK=" + bookingDetails.getTotalPriceSEK(), double.class));
             }
             if (bookingDetails.getTotalPriceEuro() != 0) {
                 existingBooking.setTotalPriceEuro(bookingDetails.getTotalPriceEuro());
