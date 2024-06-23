@@ -9,6 +9,7 @@ import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
+@Table(name = "sushi_bookings")
 public class Booking {
 
     @Id

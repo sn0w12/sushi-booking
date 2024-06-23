@@ -7,6 +7,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 
 @Entity
+@Table(name = "sushi_customerorders")
 @JsonIgnoreProperties({"customer"})
 public class CustomerOrder {
 
